@@ -314,11 +314,11 @@ s21_size_t s21_strspn(const char *str1, const char *str2);
 
 // SPRINTF
 int s21_sprintf(char *str, const char *format, ...);
-void spec_d(long int number_without_length, char *stringified_number,
+void spec_d(long int number, char *stringified_number,
             spec spec);
-void spec_f(double number, char *stringified_number, spec *spec);
+void spec_f(long double number, char *stringified_number, spec *spec);
 void spec_x(long int decimalValue, char hexString[], spec spec);
 void spec_g(long double number, char *mini, spec *spec);
-void spec_e(long double number, char *mini, char *start_index, spec spec);
+void spec_e(long double number, char* mini, spec *spec);
 
 #endif  // S21_STRING_H_

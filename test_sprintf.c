@@ -70,9 +70,9 @@ END_TEST
 START_TEST(sprintf_f_1) {
   char str[50];
   char str1[50];
-  double dd = 999.999999;
-  s21_sprintf(str, "Hello World %.f", dd);
-  sprintf(str1, "Hello Worldd %.f", dd);
+  double dd = 9999.999999;
+  s21_sprintf(str, "Hello World %.10f", dd);
+  sprintf(str1, "Hello World %.10f", dd);
   ck_assert_str_eq(str, str1);
 }
 END_TEST
@@ -130,7 +130,7 @@ START_TEST(sprintf_f_7) {
   char str1[50];
   double dd = 998.888888;
   s21_sprintf(str, "Hello World %.10f", dd);
-  sprintf(str1, "Hello Worldd %.10f", dd);
+  sprintf(str1, "Hello World %.10f", dd);
   ck_assert_str_eq(str, str1);
 }
 END_TEST
@@ -225,9 +225,9 @@ END_TEST
 START_TEST(sprintf_g_4) {
   char str[50];
   char str1[50];
-  double dd = 266.101;
-  s21_sprintf(str, "asdfasdf %.2g asdfasdf %o", dd, 33);
-  sprintf(str1, "asdfasdf %.2g asdfasdf %o", dd, 33);
+  double dd = 266.12000;
+  s21_sprintf(str, "asdfasdf %.7g asdfasdf %o", dd, 33);
+  sprintf(str1, "asdfasdf %.7g asdfasdf %o", dd, 33);
   ck_assert_str_eq(str, str1);
 }
 END_TEST
