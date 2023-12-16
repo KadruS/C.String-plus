@@ -545,16 +545,40 @@ void spec_g(long double number, char* stringified_number, spec* spec) {
 }
 
 void spec_e(long double number, char* stringified_number, spec spec) {
+  //Is negative
+  int is_negative = 0;
+  if (number < 0) {
+    number *= -1;
+    stringified_number[0] = '-';
+    stringified_number++;
+  }
+
+  //Making float and checking if power minus or not
   int pow = 0;
-  while(number >= 10) { //уточнить условие
-    number /=10;
+  while(number >= 10 || number <= 1) { //уточнить условие // отрицательные степени чекнуть //1-9 ??
+    if (number >= 10) {
+      number /=10;
+    } else {
+      number *= 10;
+    }
     pow++;
   }
-  char e = spec.specifier == 'E' ? 'E' : 'e';
-  char notation[10] = { e,'+', pow + '0' };
+
+  // char pow_string[4];
+  // int i = 3;
+  // while(pow >= 1) {
+  //   pow_string[i-1] = pow % 10 + '0';
+  //   pow /= 10;
+  //   i--;
+  // }
+  // pow_string[3] = '\0';
+
+  // char e = spec.specifier == 'E' ? 'E' : 'e';
+  // char notation[10] = { e,'+', pow + '0'};
 
   spec_f(number, stringified_number, &spec);
-  s21_strcat(stringified_number, notation);
+  // printf("%s\n", stringified_number);
+  // s21_strcat(stringified_number, pow_string);
 }
 
 void test_spec_s() {

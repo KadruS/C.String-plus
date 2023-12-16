@@ -266,9 +266,10 @@ END_TEST
 START_TEST(sprintf_e_2) {
   char str[50];
   char str1[50];
-  double dd = 19000000123.438954354534;
-  s21_sprintf(str, "asdfasdf %.e asdfasdf", dd);
-  sprintf(str1, "asdfasdf %.e asdfasdf", dd);
+  double dd = -0.00000438546;
+  double minus = -123534.2309489;
+  s21_sprintf(str, "\npow minus: %.e \nchislo minus: %e", dd, minus);
+  sprintf(str1, "\npow minus: %.e \nchislo minus: %e", dd, minus);
   ck_assert_str_eq(str, str1);
 }
 END_TEST
@@ -279,6 +280,16 @@ START_TEST(sprintf_e_3) {
   long double dd = 12400000000.438954354534;
   s21_sprintf(str, "asdfasdf %Le asdfasdf", dd);
   sprintf(str1, "asdfasdf %Le asdfasdf", dd);
+  ck_assert_str_eq(str, str1);
+}
+END_TEST
+
+START_TEST(sprintf_e_4) {
+  char str[50];
+  char str1[50];
+  double dd = 8.24;
+  s21_sprintf(str, "asdfasdf %e asdfasdf %.2e", dd, dd);
+  sprintf(str1, "asdfasdf %e asdfasdf %.2e", dd, dd);
   ck_assert_str_eq(str, str1);
 }
 END_TEST
@@ -317,6 +328,7 @@ Suite *test_sprintf(void) {
   tcase_add_test(tc, sprintf_e_1);
   tcase_add_test(tc, sprintf_e_2);
   tcase_add_test(tc, sprintf_e_3);
+  tcase_add_test(tc, sprintf_e_4);
 
   return s;
 }
