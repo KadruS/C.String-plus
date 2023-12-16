@@ -32,5 +32,6 @@ Suite *test_strstr(void);
 // Suite *test_trim(void);
 
 Suite *test_sprintf(void);
+Suite *test_sprintf_f(void);
 
 #endif  // SRC_TESTS_ME_H

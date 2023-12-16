@@ -11,7 +11,7 @@ typedef struct {
   int minus;
   int plus;
   int space;
-  // int sharp;
+  int hash;
   int zero;
   int width;
   int accuracy;
@@ -318,7 +318,12 @@ void spec_d(long int number, char *stringified_number,
             spec spec);
 void spec_f(long double number, char *stringified_number, spec *spec);
 void spec_x(long int decimalValue, char hexString[], spec spec);
-void spec_g(long double number, char *mini, spec *spec);
-void spec_e(long double number, char* mini, spec *spec);
+void spec_g(long double number, char* stringified_number, spec *spec);
+void spec_e(long double number, char* stringified_number, spec spec);
+
+char* begin_buf(char* buffer, char* mini, int width, spec* spec);
+char* end_buf(char* buffer, char* mini, int width, spec* spec);
+char* set_buf(char* buffer, char* mini, spec* spec);
+char* spec_hash(char* buffer, char* mini, int* width, spec* spec);
 
 #endif  // S21_STRING_H_

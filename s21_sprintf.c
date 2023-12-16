@@ -7,53 +7,145 @@
 void spec_s(const char* str, char* mini, int accuracy);
 void spec_c(int symbol, char* buff);
 
-char* set_buf_and_width(char* buffer, char* mini_start, int width, spec* spec) {
-  char* mini_current = mini_start;
-  s21_size_t count_width = width;
+char* begin_buf(char* buffer, char* mini, int width, spec* spec) {
+  char* mini_current = NULL;
+  mini_current = mini;
 
-  if (!spec->minus) {
-    for (s21_size_t i = 0; i < s21_strlen(mini_start) || (int)i < width;
-         i++) {  // s21_strlen
-      if (count_width > s21_strlen(mini_start)) {
-        if (spec->plus == 1) {
-          spec->plus++;
-          count_width--;
-          continue;
-        }
-        if (spec->zero)  // flag ZERO
-          *buffer = '0';
-        else
-          *buffer = ' ';
-        count_width--;
-      } else {
-        if (spec->plus == 2) {  // flag PLUS
-          *buffer = '+';
-          buffer++;
-          spec->plus++;
-        }
-        *buffer = *mini_current;
-        mini_current++;
-      }
-      buffer++;
+  s21_size_t count_width = width;
+  if (count_width == 0 || (s21_strlen(mini) >= count_width)) {
+    spec->plus++;
+    spec->space++;
+
+    if ((spec->specifier == 's' || spec->specifier == 'p') &&
+        (spec->plus || spec->space)) {
+      if (count_width != 0) count_width--;
+      spec->plus = 0;   // обработка при плюсе
+      spec->space = 0;  // обработка при пробеле
     }
-  } else {
-    for (s21_size_t i = 0; i < s21_strlen(mini_start) || (int)i < width; i++) {
-      if (i < s21_strlen(mini_start)) {
-        *buffer = *mini_current;
-        mini_current++;
-      } else if (spec->zero)  // flag ZERO
+  } else if ((spec->specifier == 's' || spec->specifier == 'p') &&
+             (spec->plus || spec->space)) {
+    spec->plus = 0;
+    spec->space = 0;
+  }
+  //  краевой случай при отсутсвии ширины
+  for (s21_size_t i = 0; i < s21_strlen(mini) || (int)i < width; i++) {
+    if (count_width > s21_strlen(mini)) {
+      if (spec->plus == 1) {
+        spec->plus++;
+        count_width--;
+        continue;
+      } else if (spec->space == 1) {
+        spec->space++;
+        count_width--;
+        continue;
+      }
+
+      if (spec->zero && count_width > s21_strlen(mini))  // flag ZERO
         *buffer = '0';
       else
         *buffer = ' ';
-      buffer++;
+
+      count_width--;
+    } else {
+      if (spec->plus == 2) {  // flag PLUS
+        *buffer = '+';
+        buffer++;
+        spec->plus++;
+      } else if (spec->space == 2) {  // flag SPACE
+        *buffer = ' ';
+        buffer++;
+        spec->space++;
+      }
+      if (spec->hash == 1) {
+        buffer = spec_hash(buffer, mini, &width,
+                           spec);  // не работает без знака минус, но  если
+                                   // возвращать функцию все работает, а тут нет
+        spec->hash += 1;
+      }
+      *buffer = *mini_current;
+      mini_current++;
     }
+    buffer++;
   }
   return buffer;
 }
 
+char* end_buf(char* buffer, char* mini, int width, spec* spec) {
+  char* mini_current = mini;
+  int width_current = width;
+  for (s21_size_t i = 0; i < s21_strlen(mini) || (int)i < width_current; i++) {
+    if (i < s21_strlen(mini)) {
+      if (spec->hash == 1) {
+        buffer = spec_hash(buffer, mini, &width_current, spec);
+        spec->hash += 1;
+        width_current--;
+      }
+      *buffer = *mini_current;
+      mini_current++;
+    } else if (spec->zero)  // flag ZERO
+      *buffer = '0';
+    else
+      *buffer = ' ';
+    buffer++;
+  }
+  return buffer;
+}
+
+char* set_buf(char* buffer, char* mini, spec* spec) {
+  int width = spec->width;
+  if (!spec->minus) {
+    buffer = begin_buf(buffer, mini, width, spec);
+  } else {
+    buffer = end_buf(buffer, mini, width, spec);
+  }
+  return buffer;
+}
+
+char* spec_hash(char* buffer, char* mini, int* width, spec* spec) {
+  if (spec->specifier == 'o') {
+    if (*width > 0 && !spec->minus) {
+      buffer--;
+    } else
+      *width += 1;
+    if (*mini != '0')
+      *buffer = '0';
+    else if (spec->minus && *mini == '0') {
+      buffer--;
+    }
+    buffer++;
+  } else if (spec->specifier == 'x') {
+    if (*width > 1 && !spec->minus)
+      buffer -= 2;
+    else
+      *width -= 2;
+    *buffer = '0';
+    buffer++;
+    *buffer = 'x';
+    buffer++;
+  } else if (spec->specifier == 'X') {
+    if (*width > 1 && !spec->minus)
+      buffer -= 2;
+    else
+      *width -= 2;
+    *buffer = '0';
+    buffer++;
+    *buffer = 'X';
+    buffer++;
+  } else if (spec->specifier == 'g') {
+    spec->accuracy = 3;
+  }
+  // }
+  if (spec->accuracy == 0) {
+    spec->accuracy = 6;
+  }
+  return buffer;
+}
+
+
 int s21_sprintf(char* str, const char* format, ...) {
   va_list args;
   va_start(args, format);
+  char* str_start = str;
 
   while (*format != '\0') {
     if (*format == '%') {
@@ -63,11 +155,21 @@ int s21_sprintf(char* str, const char* format, ...) {
       if (*format == '-') {
         spec.minus = 1;
         format++;
-      } else if (*format == '+') {
+      }
+      if (*format == '+') {
         spec.plus = 1;
         format++;
-      } else if (*format == ' ') {
+      }
+      if (*format == ' ') {
         spec.space = 1;
+        format++;
+      }
+      if (*format == '#') {
+        spec.hash = 1;
+        format++;
+      }
+      if (*format == '0') {
+        spec.zero = 1;
         format++;
       }
 
@@ -118,10 +220,10 @@ int s21_sprintf(char* str, const char* format, ...) {
             int_arg = (int) va_arg(args, int);
           }
 
-          char stringified_number[50] = {0};  //={0}
+          char stringified_number[50] = {0};
           spec_d(int_arg, stringified_number, spec);
 
-          str = set_buf_and_width(str, stringified_number, spec.width, &spec);
+          str = set_buf(str, stringified_number, &spec);
 
           format++;
           break;
@@ -136,7 +238,7 @@ int s21_sprintf(char* str, const char* format, ...) {
 
           char stringified_number[10000] = {0};
           spec_f(double_arg, stringified_number, &spec);
-          str = set_buf_and_width(str, stringified_number, spec.width, &spec);
+          str = set_buf(str, stringified_number, &spec);
 
           format++;
           break;
@@ -145,7 +247,7 @@ int s21_sprintf(char* str, const char* format, ...) {
           char mini[100] = {0};
           char* string_arg = va_arg(args, char*);
           spec_s(string_arg, mini, spec.accuracy);
-          str = set_buf_and_width(str, mini, spec.width, &spec);
+          str = set_buf(str, mini, &spec);
 
           format++;
           break;
@@ -154,14 +256,14 @@ int s21_sprintf(char* str, const char* format, ...) {
           int char_arg = va_arg(args, int);
           char mini[1] = {0};
           spec_c(char_arg, mini);
-          str = set_buf_and_width(str, mini, spec.width, &spec);
+          str = set_buf(str, mini, &spec);
           format++;
           break;
         }
         case '%': {
           char mini[1] = {0};
           mini[0] = '%';
-          str = set_buf_and_width(str, mini, spec.width, &spec);
+          str = set_buf(str, mini, &spec);
           format++;
           break;
         }
@@ -172,7 +274,7 @@ int s21_sprintf(char* str, const char* format, ...) {
           char stringified_number[100] = {0};
 
           spec_x(int_arg, stringified_number, spec);
-          str = set_buf_and_width(str, stringified_number, spec.width, &spec);
+          str = set_buf(str, stringified_number, &spec);
 
           format++;
           break;
@@ -183,7 +285,7 @@ int s21_sprintf(char* str, const char* format, ...) {
           char stringified_number[100] = {0};
 
           spec_x(int_arg, stringified_number, spec);
-          str = set_buf_and_width(str, stringified_number, spec.width, &spec);
+          str = set_buf(str, stringified_number, &spec);
 
           format++;
           break;
@@ -195,7 +297,7 @@ int s21_sprintf(char* str, const char* format, ...) {
           char stringified_number[100] = {0};
 
           spec_x(int_arg, stringified_number, spec);
-          str = set_buf_and_width(str, stringified_number, spec.width, &spec);
+          str = set_buf(str, stringified_number, &spec);
 
           format++;
           break;
@@ -210,7 +312,7 @@ int s21_sprintf(char* str, const char* format, ...) {
 
           char stringified_number[1000] = {0};
           spec_g(double_arg, stringified_number, &spec);
-          str = set_buf_and_width(str, stringified_number, spec.width, &spec);
+          str = set_buf(str, stringified_number, &spec);
           // result += result_count(stringified_number);
           format++;
           break;
@@ -224,8 +326,8 @@ int s21_sprintf(char* str, const char* format, ...) {
             double_arg = (double)va_arg(args, double);
           }
           char stringified_number[100] = {0};
-          spec_e(double_arg, stringified_number, &spec);
-          str = set_buf_and_width(str, stringified_number, spec.width, &spec);
+          spec_e(double_arg, stringified_number, spec);
+          str = set_buf(str, stringified_number, &spec);
           // result += result_count(stringified_number);
           format++;
           break;
@@ -238,8 +340,8 @@ int s21_sprintf(char* str, const char* format, ...) {
             double_arg = (double)va_arg(args, double);
           }
           char stringified_number[100] = {0};
-          spec_e(double_arg, stringified_number, &spec);
-          str = set_buf_and_width(str, stringified_number, spec.width, &spec);
+          spec_e(double_arg, stringified_number, spec);
+          str = set_buf(str, stringified_number, &spec);
           // result += result_count(stringified_number);
           format++;
           break;
@@ -253,7 +355,7 @@ int s21_sprintf(char* str, const char* format, ...) {
   }
   *str = '\0';
   va_end(args);
-  return 0;
+  return s21_strlen(str_start);
 }
 
 void spec_c(int symbol, char* buff) {
@@ -316,13 +418,13 @@ void spec_f(long double number, char* stringified_number, spec* spec) {
     decimal_part *= -1;
   }
 
-  if (decimal_part == 1 && spec->accuracy == 0) {
+  if (labs((long int)decimal_part) / (int)(pow(10, spec->accuracy)) % 10 == 1) { // условие хуета ( 
+    decimal_part = 0;
     if (int_part >= 0) {
       int_part += 1;
     } else {
       int_part -= 1;
     }
-
   }
 
   char s[1000] = {0};
@@ -332,10 +434,11 @@ void spec_f(long double number, char* stringified_number, spec* spec) {
   int decimal_accuracy = spec->accuracy;
   spec->accuracy = 0;
 
-  spec_d((long int)int_part, stringified_number, *spec);
+  spec_d((long int)int_part, stringified_number, *spec); // insert lower
 
   if (decimal_accuracy != 0) {
     s21_strcat(stringified_number, ".");
+    //here
     s21_strcat(stringified_number, s);
   }
 }
@@ -394,7 +497,7 @@ void spec_x(long int decimalValue, char hexString[], spec spec) {
   }
 }
 
-void spec_g(long double number, char* mini, spec* spec) {
+void spec_g(long double number, char* stringified_number, spec* spec) {
   if (!spec->accuracy_defined) {
     spec->accuracy = 6;
   }
@@ -435,71 +538,23 @@ void spec_g(long double number, char* mini, spec* spec) {
   spec->accuracy_defined = 1;
 
   if (len_int + len_dec > 6) {
-    spec_e(number, mini, spec);
+    spec_e(number, stringified_number, *spec);
   } else {
-    spec_f(number, mini, spec);
+    spec_f(number, stringified_number, spec);
   }
 }
 
-void spec_e(long double number, char* mini, spec *spec) {
-  int accuracy = spec->accuracy;
-  int accuracy_defined = spec->accuracy_defined;
-  int zero_accuracy = accuracy;
-  if (!accuracy_defined) {
-    accuracy = 6;
+void spec_e(long double number, char* stringified_number, spec spec) {
+  int pow = 0;
+  while(number >= 10) { //уточнить условие
+    number /=10;
+    pow++;
   }
+  char e = spec.specifier == 'E' ? 'E' : 'e';
+  char notation[10] = { e,'+', pow + '0' };
 
-  int exponent = 0;
-
-  if (number != 0.0) {
-    while (fabsl(number) < 1.0) {
-      number *= 10.0;
-      exponent--;
-    }
-    while (fabsl(number) >= 10.0) {
-      number /= 10.0;
-      exponent++;
-    }
-    long double integer_part = 0;
-    long double decimal_part = modfl(number, &integer_part);
-    if (decimal_part < 0) {
-      decimal_part *= -1;
-    }
-    spec_d((long int)integer_part, mini, *spec);
-    if (zero_accuracy != 0) {
-      mini += s21_strlen(mini);
-      *mini = '.';
-      mini += 1;
-
-      long int decimal_part_int =
-          (long int)(decimal_part * pow(10, accuracy + 1));
-      spec_d(decimal_part_int, mini, *spec);
-    } else {
-      int count = 0;
-      int len = s21_strlen(mini);
-      char last_char = mini[len - 1];
-      if (last_char >= '5') {
-        for (int i = len - 1 - count; i >= 0 && mini[i] == '9'; i--) {
-          mini[i] = '0';
-          count++;
-        }
-        mini[len - count - 1] += 1;
-      }
-      mini[len] = '\0';
-      mini += s21_strlen(mini);
-      if (spec->specifier == 'E') {
-        *mini = 'E';
-      } else
-        *mini = 'e';
-      mini += 1;
-      if (exponent >= 0) {
-        *mini = '+';
-        mini += 1;
-      }
-      spec_d(exponent, mini,  *spec);
-    }
-  }
-
+  spec_f(number, stringified_number, &spec);
+  s21_strcat(stringified_number, notation);
 }
 
 void test_spec_s() {

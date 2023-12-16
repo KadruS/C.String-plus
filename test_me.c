@@ -18,7 +18,8 @@ int main(void) {
                               // test_to_upper(),
                               // test_trim(),
                               // test_insert(),
-                              test_sprintf(), NULL};
+                              test_sprintf(),
+                               NULL};
 
   for (int i = 0; s21_string_test[i] != NULL; i++) {  // (&& failed == 0)
     SRunner *sr = srunner_create(s21_string_test[i]);
