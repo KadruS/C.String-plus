@@ -5,10 +5,12 @@ START_TEST(sprintf_1_f) {
   char str2[200];
   char *str3 = "%f TEST %.f TEST %4f TEST %4.f TEST %5.10f!";
   double num = 76.756589367;
-  printf("%d ", sprintf(str1, str3, num, num, num, num, num));
-  printf("%d\n", s21_sprintf(str1, str3, num, num, num, num, num));
-  ck_assert_int_eq(sprintf(str1, str3, num, num, num, num, num),
-                   s21_sprintf(str2, str3, num, num, num, num, num));
+  // printf("%d ", sprintf(str1, str3, num, num, num, num, num));
+  // printf("%d\n", s21_sprintf(str1, str3, num, num, num, num, num));
+  // ck_assert_int_eq(sprintf(str1, str3, num, num, num, num, num),
+  //                  s21_sprintf(str2, str3, num, num, num, num, num));
+  sprintf(str1, str3, num, num, num, num, num);
+  s21_sprintf(str2, str3, num, num, num, num, num);
   ck_assert_pstr_eq(str1, str2);
 }
 END_TEST

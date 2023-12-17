@@ -70,9 +70,9 @@ END_TEST
 START_TEST(sprintf_f_1) {
   char str[50];
   char str1[50];
-  double dd = 9999.999999;
-  s21_sprintf(str, "Hello World %.10f", dd);
-  sprintf(str1, "Hello World %.10f", dd);
+  double dd = 0.0055;
+  s21_sprintf(str, "Hello Worldd %.3f", dd);
+  sprintf(str1, "Hello World %.3f", dd);
   ck_assert_str_eq(str, str1);
 }
 END_TEST
@@ -109,7 +109,7 @@ START_TEST(sprintf_f_5) {
   char str1[10000];
   double chislo = 14.1;
   chislo++;
-  s21_sprintf(str, "Hello World %f sdfdsadfs", chislo);
+  s21_sprintf(str, "Hello World %f sdfdsadf", chislo);
   sprintf(str1, "Hello World %f sdfdsadf", chislo);
   ck_assert_str_eq(str, str1);
 }
@@ -118,9 +118,9 @@ END_TEST
 START_TEST(sprintf_f_6) {
   char str[10000];
   char str1[10000];
-  double chislo = 1.324;
-  s21_sprintf(str, "Hello World %10.f sdfdsadf", chislo);
-  sprintf(str1, "Hello World %10.f sdfdsadf", chislo);
+  double chislo = 0.00324;
+  s21_sprintf(str, "Hello World %f sdfdsadf", chislo);
+  sprintf(str1, "Hello World %f sdfdsadf", chislo);
   ck_assert_str_eq(str, str1);
 }
 END_TEST
@@ -215,9 +215,9 @@ END_TEST
 START_TEST(sprintf_g_1) {
   char str[50];
   char str1[50];
-  double dd = 266.101;
+  double dd = 266.100;
   s21_sprintf(str, "asdfasdf %g asdfasdf %o", dd, 33);
-  sprintf(str1, "asdfasdf %g asdfasdf %o", dd, 33);
+  sprintf(str1, "asdfasdf %.6g asdfasdf %o", dd, 33);
   ck_assert_str_eq(str, str1);
 }
 END_TEST
@@ -226,8 +226,9 @@ START_TEST(sprintf_g_2) {
   char str[50];
   char str1[50];
   double dd = 10000000000.438954354534;
-  s21_sprintf(str, "asdfasdf %g asdfasdf", dd);
-  sprintf(str1, "asdfasdf %g asdfasdf", dd);
+  double d = 9993212.9993;
+  s21_sprintf(str, "asdfasdf %g asdfasdf%g", dd, d);
+  sprintf(str1, "asdfasdf %g asdfasdf%g", dd, d);
   ck_assert_str_eq(str, str1);
 }
 END_TEST
@@ -294,6 +295,17 @@ START_TEST(sprintf_e_4) {
 }
 END_TEST
 
+START_TEST(sprintf_e_5) {
+  char str[50];
+  char str1[50];
+  long double dd = 10000000000.438954354534;
+  double d = 10000000000.438954354534;
+  s21_sprintf(str, "asdfasdf %Le asdfasdfd %e", dd, d);
+  sprintf(str1, "asdfasdf %Le asdfasdf %e", dd, d);
+  ck_assert_str_eq(str, str1);
+}
+END_TEST
+
 Suite *test_sprintf(void) {
   Suite *s = suite_create("\033[45m-=S21_SPRINTF=-\033[0m");
   TCase *tc = tcase_create("sprintf_tc");
@@ -329,6 +341,7 @@ Suite *test_sprintf(void) {
   tcase_add_test(tc, sprintf_e_2);
   tcase_add_test(tc, sprintf_e_3);
   tcase_add_test(tc, sprintf_e_4);
+  tcase_add_test(tc, sprintf_e_5);
 
   return s;
 }

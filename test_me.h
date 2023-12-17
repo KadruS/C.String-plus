@@ -33,5 +33,7 @@ Suite *test_strstr(void);
 
 Suite *test_sprintf(void);
 Suite *test_sprintf_f(void);
+Suite *test_sprintf_d(void);
+Suite *test_sprintf_e(void);
 
 #endif  // SRC_TESTS_ME_H

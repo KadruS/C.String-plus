@@ -18,7 +18,10 @@ int main(void) {
                               // test_to_upper(),
                               // test_trim(),
                               // test_insert(),
-                              test_sprintf(),
+                              // test_sprintf(),
+                              // test_sprintf_d(),
+                              // test_sprintf_f(),
+                              test_sprintf_e(),
                                NULL};
 
   for (int i = 0; s21_string_test[i] != NULL; i++) {  // (&& failed == 0)

@@ -320,6 +320,7 @@ void spec_f(long double number, char *stringified_number, spec *spec);
 void spec_x(long int decimalValue, char hexString[], spec spec);
 void spec_g(long double number, char* stringified_number, spec *spec);
 void spec_e(long double number, char* stringified_number, spec spec);
+void pow_calc(int pow, char* pow_string);
 
 char* begin_buf(char* buffer, char* mini, int width, spec* spec);
 char* end_buf(char* buffer, char* mini, int width, spec* spec);

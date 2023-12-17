@@ -208,6 +208,7 @@ int s21_sprintf(char* str, const char* format, ...) {
         case 'u':
         case 'd': {
           // default accuracy 0 или 1 ??
+          spec.specifier = 'd';
           if (!spec.accuracy_defined) {
             spec.accuracy = 1;
           }
@@ -222,13 +223,12 @@ int s21_sprintf(char* str, const char* format, ...) {
 
           char stringified_number[50] = {0};
           spec_d(int_arg, stringified_number, spec);
-
           str = set_buf(str, stringified_number, &spec);
-
           format++;
           break;
         }
         case 'f': {
+          spec.specifier = 'f';
           long double double_arg;
           if (spec.length == 'L') {
             double_arg = va_arg(args, long double);
@@ -244,6 +244,7 @@ int s21_sprintf(char* str, const char* format, ...) {
           break;
         }
         case 's': {
+          spec.specifier = 's';
           char mini[100] = {0};
           char* string_arg = va_arg(args, char*);
           spec_s(string_arg, mini, spec.accuracy);
@@ -253,6 +254,7 @@ int s21_sprintf(char* str, const char* format, ...) {
           break;
         }
         case 'c': {
+          spec.specifier = 'c';
           int char_arg = va_arg(args, int);
           char mini[1] = {0};
           spec_c(char_arg, mini);
@@ -280,6 +282,7 @@ int s21_sprintf(char* str, const char* format, ...) {
           break;
         }
         case 'x': {
+          spec.specifier = 'x';
           long int int_arg = va_arg(args, long int);
 
           char stringified_number[100] = {0};
@@ -303,6 +306,7 @@ int s21_sprintf(char* str, const char* format, ...) {
           break;
         }
         case 'g': {
+          spec.specifier = 'g';
           long double double_arg;
           if (spec.length == 'L') {
             double_arg = va_arg(args, long double);
@@ -333,6 +337,7 @@ int s21_sprintf(char* str, const char* format, ...) {
           break;
         }
         case 'e': {
+          spec.specifier = 'e';
           long double double_arg;
           if (spec.length == 'L') {
             double_arg = va_arg(args, long double);
@@ -385,6 +390,10 @@ void spec_d(long int number, char* stringified_number,
     stringified_number[i] = '-';
     i++;
     length++;
+  } else if (number == 0) { //под вопросом
+    length++;
+    stringified_number[0] = (spec.accuracy == 0 && spec.specifier == 'd') ? '\0' : '0';
+    i = 100; // tut hzz
   }
 
   long int temp = number;
@@ -501,11 +510,13 @@ void spec_g(long double number, char* stringified_number, spec* spec) {
   if (!spec->accuracy_defined) {
     spec->accuracy = 6;
   }
+  int copy_accuracy = spec->accuracy;
   // char inim[10000] = {0};
   int len_int = 0;
   int len_dec = 0;
   long double integer_part = 0;
   long double decimal_part = modfl(number, &integer_part);
+  long int integer_part_int = (long int)(round(integer_part));
   long int decimal_part_int = (long int)(round(decimal_part * pow(10, spec->accuracy)));
 
   // Два цикла чтобы посчитать количество знаков в числах
@@ -538,6 +549,14 @@ void spec_g(long double number, char* stringified_number, spec* spec) {
   spec->accuracy_defined = 1;
 
   if (len_int + len_dec > 6) {
+    while (integer_part_int % 10 == 0 && integer_part_int > 1){ // Хуйня цикл!
+      spec->accuracy--;
+      integer_part_int /= 10;
+      if (spec->accuracy < 0) {
+        spec->accuracy = 0;
+      }
+    }
+    // spec->accuracy = 0;
     spec_e(number, stringified_number, *spec);
   } else {
     spec_f(number, stringified_number, spec);
@@ -546,7 +565,7 @@ void spec_g(long double number, char* stringified_number, spec* spec) {
 
 void spec_e(long double number, char* stringified_number, spec spec) {
   //Is negative
-  int is_negative = 0;
+  char sign = '+';
   if (number < 0) {
     number *= -1;
     stringified_number[0] = '-';
@@ -555,30 +574,48 @@ void spec_e(long double number, char* stringified_number, spec spec) {
 
   //Making float and checking if power minus or not
   int pow = 0;
-  while(number >= 10 || number <= 1) { //уточнить условие // отрицательные степени чекнуть //1-9 ??
+  while(number >= 10 || number < 1) { //уточнить условие // отрицательные степени чекнуть //1-9 ??
     if (number >= 10) {
       number /=10;
     } else {
       number *= 10;
+      sign = '-';
     }
     pow++;
   }
 
-  // char pow_string[4];
-  // int i = 3;
-  // while(pow >= 1) {
-  //   pow_string[i-1] = pow % 10 + '0';
-  //   pow /= 10;
-  //   i--;
-  // }
-  // pow_string[3] = '\0';
+  char pow_string[4];
+  pow_calc(pow, pow_string);
 
-  // char e = spec.specifier == 'E' ? 'E' : 'e';
-  // char notation[10] = { e,'+', pow + '0'};
+  char e = spec.specifier == 'E' ? 'E' : 'e';
+  char notation[3] = { e, sign, '\0'};
 
   spec_f(number, stringified_number, &spec);
   // printf("%s\n", stringified_number);
-  // s21_strcat(stringified_number, pow_string);
+  s21_strcat(stringified_number, notation);
+  s21_strcat(stringified_number, pow_string);
+}
+
+void pow_calc(int pow, char* pow_string) {
+  int i = 2;
+  //0
+  if (pow == 0) {
+    pow_string[0] = '0';
+    pow_string[1] = '0';
+    pow_string[2] = '\0';
+  } else if(pow < 10) {
+    pow_string[0] = '0';
+  } else if (pow >= 100) {
+    i = 3;
+  }
+  // pow_string[ ]
+  // 10-100
+  while(i >= 0) {
+    pow_string[i-1] = pow % 10 + '0';
+    pow /= 10;
+    i--;
+  }
+  pow_string[3] = '\0';
 }
 
 void test_spec_s() {
