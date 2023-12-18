@@ -1,6 +1,6 @@
 TARGETS=*.c
 CFLAGS=-std=c11 #-Wall -Werror -Wextra 
-TESTS=test*.c
+TESTS=tests/test*.c
 FLAG_TEST=-lcheck
 FUNCTIONS=s21_strstr.c s21_strncat.c s21_strcat.c s21_strrchr.c s21_strpbrk.c s21_strlen.c s21_sprintf.c 
 # SRCS=$(wildcard s21_math.c)
