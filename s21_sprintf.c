@@ -434,19 +434,21 @@ void spec_f(long double number, char* stringified_number, spec* spec) {
   long double int_part = 0;
   long double decimal_part = modfl(number, &int_part);
   decimal_part = round(decimal_part * pow(10, spec->accuracy));
+  // long long int_part_int = (long long)llround(int_part);
+  // printf("%Lf %Lf %lld\n", int_part, number, int_part_int);
+
+  if (labs((long int)decimal_part) / (int)(pow(10, spec->accuracy)) % 10 ==
+      1) {
+    if (decimal_part >= 0) {
+      int_part += 1;
+    } else if (decimal_part < 0){
+      int_part -= 1;
+    }
+    decimal_part = 0;
+  }
 
   if (decimal_part < 0) {
     decimal_part *= -1;
-  }
-
-  if (labs((long int)decimal_part) / (int)(pow(10, spec->accuracy)) % 10 ==
-      1) {  // условие хуета (
-    decimal_part = 0;
-    if (int_part >= 0) {
-      int_part += 1;
-    } else {
-      int_part -= 1;
-    }
   }
 
   char s[1000] = {0};
@@ -637,7 +639,7 @@ s21_size_t add_width_and_flags(char* stringified_number, char* str, spec spec) {
   int is_plus_added = (spec.plus && *stringified_number != '-') ? 1 : 0;
   int is_space_added = (spec.space && *stringified_number != '-' && !is_plus_added) ? 1 : 0;
   s21_size_t shift = s21_strlen(stringified_number) + is_plus_added + is_space_added;
-
+  // printf("%s\n", stringified_number);
   //Flag 0
   if (spec.zero && (is_plus_added || is_space_added)) {
     *str++ = is_plus_added ? '+' : ' ';
