@@ -628,16 +628,28 @@ void pow_calc(int pow, char* pow_string) {
 
 s21_size_t flag_plus(char* stringified_number, char* str, spec spec) {
   int is_plus_added = (spec.plus && *stringified_number != '-') ? 1 : 0;
-
-  //Width
-  s21_size_t shift = s21_strlen(stringified_number) + is_plus_added;
+  int is_space_added = (spec.space && *stringified_number != '-') ? 1 : 0;
+  s21_size_t shift = s21_strlen(stringified_number) + is_plus_added + is_space_added;
+  //Flag 0
+  if (spec.zero && (is_plus_added || is_space_added)) {
+    *str++ = is_plus_added ? '+' : ' ';
+    is_plus_added = 0;
+    is_space_added = 0;
+  } else if (spec.zero && *stringified_number == '-') {
+    *str++ = *stringified_number++;
+  }
+  //Width and flag 0
   while (shift < spec.width && !spec.minus) {
-    *str++ = ' ';
+    *str++ = spec.zero ? '0' : ' ';
     shift++;
   }
   //Flag plus
-  if (spec.plus && *stringified_number != '-') {
+  if (is_plus_added) {
     *str++ = '+';
+  }
+  //Space
+  if (is_space_added) {
+    *str++ = ' ';
   }
   //Main algo
   while (*stringified_number != '\0') {

@@ -300,7 +300,7 @@ START_TEST(sprintf_e_5) {
   char str1[50];
   long double dd = 10000000000.438954354534;
   double d = 10000000000.438954354534;
-  s21_sprintf(str, "asdfasdf %Le asdfasdfd %e", dd, d);
+  s21_sprintf(str, "asdfasdf %Le asdfasdf %e", dd, d);
   sprintf(str1, "asdfasdf %Le asdfasdf %e", dd, d);
   ck_assert_str_eq(str, str1);
 }
@@ -332,11 +332,39 @@ START_TEST(sprintf_minus_1) {
 }
 END_TEST
 
+//space spec_d
+START_TEST(sprintf_space_1) {
+  char str[50];
+  char str1[50];
+  int val1 = 1000;
+  int val2 = -1000;
+  int val3 = -0;
+  s21_sprintf(str, "a % d b % d c % d", val1, val2, val3);
+  sprintf(str1, "a % d b % d c % d", val1, val2, val3);
+  ck_assert_str_eq(str, str1);
+}
+END_TEST
+
+//zero spec_d
+START_TEST(sprintf_zero_1) {
+  char str[50];
+  char str1[50];
+  int val1 = 1000;
+  int val2 = -1000;
+  int val3 = -0;
+  s21_sprintf(str, "a % 012d b % 012d c % 012d", val1, val2, val3);
+  sprintf(str1, "a % 012d b % 012d c % 012d", val1, val2, val3);
+  ck_assert_str_eq(str, str1);
+}
+END_TEST
+
 Suite *test_sprintf(void) {
   Suite *s = suite_create("\033[45m-=S21_SPRINTF=-\033[0m");
   TCase *tc = tcase_create("sprintf_tc");
 
   suite_add_tcase(s, tc);
+  tcase_add_test(tc, sprintf_zero_1);
+  tcase_add_test(tc, sprintf_space_1);
   tcase_add_test(tc, sprintf_plus_1);
   tcase_add_test(tc, sprintf_minus_1);
   tcase_add_test(tc, sprintf_1);
