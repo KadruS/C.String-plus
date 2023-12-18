@@ -321,7 +321,7 @@ void spec_x(long int decimalValue, char hexString[], spec spec);
 void spec_g(long double number, char* stringified_number, spec *spec);
 void spec_e(long double number, char* stringified_number, spec spec);
 void pow_calc(int pow, char* pow_string);
-s21_size_t flag_plus(char* stringified_number, char* str, spec spec);
+s21_size_t add_width_and_flags(char* stringified_number, char* str, spec spec);
 
 char* begin_buf(char* buffer, char* mini, int width, spec* spec);
 char* end_buf(char* buffer, char* mini, int width, spec* spec);

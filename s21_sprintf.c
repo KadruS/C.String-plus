@@ -150,26 +150,27 @@ int s21_sprintf(char* str, const char* format, ...) {
     if (*format == '%') {
       format++;
       spec spec = {0};
-
-      if (*format == '-') {
-        spec.minus = 1;
-        format++;
-      }
-      if (*format == '+') {
-        spec.plus = 1;
-        format++;
-      }
-      if (*format == ' ') {
-        spec.space = 1;
-        format++;
-      }
-      if (*format == '#') {
-        spec.hash = 1;
-        format++;
-      }
-      if (*format == '0') {
-        spec.zero = 1;
-        format++;
+      while(*format < 46 || *format == '0') {
+        if (*format == '+') {
+          spec.plus = 1;
+          format++;
+        }
+        if (*format == '-') {
+          spec.minus = 1;
+          format++;
+        }
+        if (*format == ' ') {
+          spec.space = 1;
+          format++;
+        }
+        if (*format == '#') {
+          spec.hash = 1;
+          format++;
+        }
+        if (*format == '0') {
+          spec.zero = 1;
+          format++;
+        }
       }
 
       while (*format >= '0' && *format <= '9') {
@@ -224,7 +225,7 @@ int s21_sprintf(char* str, const char* format, ...) {
           char* p = &stringified_number[0];
           spec_d(int_arg, stringified_number, spec);
           // str = set_buf(str, stringified_number, &spec);
-          str += flag_plus(stringified_number, str, spec);
+          str += add_width_and_flags(stringified_number, str, spec);
           format++;
           break;
         }
@@ -239,8 +240,8 @@ int s21_sprintf(char* str, const char* format, ...) {
 
           char stringified_number[10000] = {0};
           spec_f(double_arg, stringified_number, &spec);
-          str = set_buf(str, stringified_number, &spec);
-
+          // str = set_buf(str, stringified_number, &spec);
+          str += add_width_and_flags(stringified_number, str, spec);
           format++;
           break;
         }
@@ -277,7 +278,8 @@ int s21_sprintf(char* str, const char* format, ...) {
           char stringified_number[100] = {0};
 
           spec_x(int_arg, stringified_number, spec);
-          str = set_buf(str, stringified_number, &spec);
+          // str = set_buf(str, stringified_number, &spec);
+          str += add_width_and_flags(stringified_number, str, spec);
 
           format++;
           break;
@@ -289,7 +291,8 @@ int s21_sprintf(char* str, const char* format, ...) {
           char stringified_number[100] = {0};
 
           spec_x(int_arg, stringified_number, spec);
-          str = set_buf(str, stringified_number, &spec);
+          // str = set_buf(str, stringified_number, &spec);
+          str += add_width_and_flags(stringified_number, str, spec);
 
           format++;
           break;
@@ -301,7 +304,8 @@ int s21_sprintf(char* str, const char* format, ...) {
           char stringified_number[100] = {0};
 
           spec_x(int_arg, stringified_number, spec);
-          str = set_buf(str, stringified_number, &spec);
+          // str = set_buf(str, stringified_number, &spec);
+          str += add_width_and_flags(stringified_number, str, spec);
 
           format++;
           break;
@@ -317,7 +321,8 @@ int s21_sprintf(char* str, const char* format, ...) {
 
           char stringified_number[1000] = {0};
           spec_g(double_arg, stringified_number, &spec);
-          str = set_buf(str, stringified_number, &spec);
+          // str = set_buf(str, stringified_number, &spec);
+          str += add_width_and_flags(stringified_number, str, spec);
           // result += result_count(stringified_number);
           format++;
           break;
@@ -332,7 +337,8 @@ int s21_sprintf(char* str, const char* format, ...) {
           }
           char stringified_number[100] = {0};
           spec_e(double_arg, stringified_number, spec);
-          str = set_buf(str, stringified_number, &spec);
+          // str = set_buf(str, stringified_number, &spec);
+          str += add_width_and_flags(stringified_number, str, spec);
           // result += result_count(stringified_number);
           format++;
           break;
@@ -347,7 +353,8 @@ int s21_sprintf(char* str, const char* format, ...) {
           }
           char stringified_number[100] = {0};
           spec_e(double_arg, stringified_number, spec);
-          str = set_buf(str, stringified_number, &spec);
+          // str = set_buf(str, stringified_number, &spec);
+          str += add_width_and_flags(stringified_number, str, spec);
           // result += result_count(stringified_number);
           format++;
           break;
@@ -626,10 +633,11 @@ void pow_calc(int pow, char* pow_string) {
   pow_string[3] = '\0';
 }
 
-s21_size_t flag_plus(char* stringified_number, char* str, spec spec) {
+s21_size_t add_width_and_flags(char* stringified_number, char* str, spec spec) {
   int is_plus_added = (spec.plus && *stringified_number != '-') ? 1 : 0;
-  int is_space_added = (spec.space && *stringified_number != '-') ? 1 : 0;
+  int is_space_added = (spec.space && *stringified_number != '-' && !is_plus_added) ? 1 : 0;
   s21_size_t shift = s21_strlen(stringified_number) + is_plus_added + is_space_added;
+
   //Flag 0
   if (spec.zero && (is_plus_added || is_space_added)) {
     *str++ = is_plus_added ? '+' : ' ';
@@ -638,23 +646,28 @@ s21_size_t flag_plus(char* stringified_number, char* str, spec spec) {
   } else if (spec.zero && *stringified_number == '-') {
     *str++ = *stringified_number++;
   }
+
   //Width and flag 0
   while (shift < spec.width && !spec.minus) {
     *str++ = spec.zero ? '0' : ' ';
     shift++;
   }
+
   //Flag plus
   if (is_plus_added) {
     *str++ = '+';
   }
+
   //Space
   if (is_space_added) {
     *str++ = ' ';
   }
+
   //Main algo
   while (*stringified_number != '\0') {
     *str++ = *stringified_number++;
   }
+
   //Flag minus
   while (shift < spec.width && spec.minus) {
     *str++ = ' ';

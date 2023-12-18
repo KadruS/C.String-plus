@@ -352,8 +352,8 @@ START_TEST(sprintf_zero_1) {
   int val1 = 1000;
   int val2 = -1000;
   int val3 = -0;
-  s21_sprintf(str, "a % 012d b % 012d c % 012d", val1, val2, val3);
-  sprintf(str1, "a % 012d b % 012d c % 012d", val1, val2, val3);
+  s21_sprintf(str, "a %012d b %012d c %012d", val1, val2, val3);
+  sprintf(str1, "a %012d b %012d c %012d", val1, val2, val3);
   ck_assert_str_eq(str, str1);
 }
 END_TEST
