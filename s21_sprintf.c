@@ -150,7 +150,7 @@ int s21_sprintf(char* str, const char* format, ...) {
     if (*format == '%') {
       format++;
       spec spec = {0};
-      while(*format < 46 || *format == '0') {
+      while(*format == '+' || *format == '-' || *format == ' ' || *format == '#' || *format == '0') {
         if (*format == '+') {
           spec.plus = 1;
           format++;
@@ -336,7 +336,7 @@ int s21_sprintf(char* str, const char* format, ...) {
             double_arg = (double)va_arg(args, double);
           }
           char stringified_number[100] = {0};
-          spec_e(double_arg, stringified_number, spec);
+          spec_e(double_arg, stringified_number, &spec);
           // str = set_buf(str, stringified_number, &spec);
           str += add_width_and_flags(stringified_number, str, spec);
           // result += result_count(stringified_number);
@@ -352,7 +352,7 @@ int s21_sprintf(char* str, const char* format, ...) {
             double_arg = (double)va_arg(args, double);
           }
           char stringified_number[100] = {0};
-          spec_e(double_arg, stringified_number, spec);
+          spec_e(double_arg, stringified_number, &spec);
           // str = set_buf(str, stringified_number, &spec);
           str += add_width_and_flags(stringified_number, str, spec);
           // result += result_count(stringified_number);
@@ -468,6 +468,9 @@ void spec_f(long double number, char* stringified_number, spec* spec) {
 }
 
 void spec_x(long int decimalValue, char hexString[], spec spec) {
+  if (!spec.accuracy_defined) {
+    spec.accuracy = 1;
+  }
   long int number;
   if (spec.length == 'l') {
     number = decimalValue;
@@ -486,6 +489,11 @@ void spec_x(long int decimalValue, char hexString[], spec spec) {
   }
   if (spec.specifier == 'o') {
     hex_or_oct = 8;
+  }
+
+  if (number == 0) {
+    hexString[0] = spec.accuracy == 0 ? '\0' : '0';
+    index++; 
   }
 
   while (number != 0) {
@@ -531,54 +539,41 @@ void spec_g(long double number, char* stringified_number, spec* spec) {
   int len_dec = 0;
   long double integer_part = 0;
   long double decimal_part = modfl(number, &integer_part);
-  long int integer_part_int = (long int)(round(integer_part));
   long int decimal_part_int =
       (long int)(round(decimal_part * pow(10, spec->accuracy)));
+  // decimal_part == 0.0000756589 when making int zeros is gone and result is 75
+  if (integer_part < 0) {
+    integer_part *= -1;
+  } else if (integer_part == 0) {
+    len_int++;
+  }
 
   // Два цикла чтобы посчитать количество знаков в числах
   while (integer_part >= 1) {
     integer_part /= 10;
     len_int++;
   }
-  int flag = 0;
-  while (decimal_part_int > 1) {
-    if (decimal_part_int % 10 == 0 && !flag) {  //добавил эту штуку |
-      spec->accuracy -= 1;
-    }
-    if (decimal_part_int % 10 != 0) {
-      len_dec++;
-      flag = 1;
-    }
-    if (flag && decimal_part_int % 10 == 0) {
-      len_dec++;
-    }
-    decimal_part_int /= 10;
-  }
-  // printf("%ld %d\n", decimal_part_int, spec->accuracy);
 
-  // Переделываем точность с учетом значащих знаков
-  // spec->accuracy -= len_int;                  ВМЕСТО ЭТОЙ ШТУКИ |
-  if (spec->accuracy < 0) {
-    spec->accuracy = 0;
+  while (decimal_part_int >= 1) {
+    decimal_part_int /= 10;
+    len_dec = spec->accuracy;
   }
+  // if (len_dec < spec->accuracy) {
+  //   len_dec
+  // }
+
   spec->accuracy_defined = 1;
 
-  if (len_int + len_dec > 6) {
-    while (integer_part_int % 10 == 0 && integer_part_int > 1) {  // Хуйня цикл!
-      spec->accuracy--;
-      integer_part_int /= 10;
-      if (spec->accuracy < 0) {
-        spec->accuracy = 0;
-      }
-    }
-    // spec->accuracy = 0;
-    spec_e(number, stringified_number, *spec);
+  if (len_int + len_dec > spec->accuracy || number < 0.0001) {
+    spec->accuracy = spec->accuracy == 0 ? 0 : spec->accuracy - 1;
+    spec_e(number, stringified_number, spec);
   } else {
+    spec->accuracy -= len_int;
     spec_f(number, stringified_number, spec);
   }
 }
 
-void spec_e(long double number, char* stringified_number, spec spec) {
+void spec_e(long double number, char* stringified_number, spec* spec) {
   // Is negative
   char sign = '+';
   if (number < 0) {
@@ -604,13 +599,14 @@ void spec_e(long double number, char* stringified_number, spec spec) {
   char pow_string[4];
   pow_calc(pow, pow_string);
 
-  char e = spec.specifier == 'E' ? 'E' : 'e';
+  char e = spec->specifier == 'E' ? 'E' : 'e';
   char notation[3] = {e, sign, '\0'};
 
-  spec_f(number, stringified_number, &spec);
+  spec_f(number, stringified_number, spec);
   // printf("%s\n", stringified_number);
   s21_strcat(stringified_number, notation);
   s21_strcat(stringified_number, pow_string);
+  // stringified_number[s21_strlen(stringified_number)] = '\0';
 }
 
 void pow_calc(int pow, char* pow_string) {
@@ -622,8 +618,10 @@ void pow_calc(int pow, char* pow_string) {
     pow_string[2] = '\0';
   } else if (pow < 10) {
     pow_string[0] = '0';
+    pow_string[2] = '\0';
   } else if (pow >= 100) {
     i = 3;
+    pow_string[3] = '\0';
   }
   // pow_string[ ]
   // 10-100
@@ -632,14 +630,18 @@ void pow_calc(int pow, char* pow_string) {
     pow /= 10;
     i--;
   }
-  pow_string[3] = '\0';
 }
 
 s21_size_t add_width_and_flags(char* stringified_number, char* str, spec spec) {
+  char s = spec.specifier;
+  int xXo = (s == 'x' || s == 'X' || s == 'o') ? 1 : 0;
   int is_plus_added = (spec.plus && *stringified_number != '-') ? 1 : 0;
   int is_space_added = (spec.space && *stringified_number != '-' && !is_plus_added) ? 1 : 0;
+  if (xXo) {
+    is_plus_added = 0;
+    is_space_added = 0;
+  }
   s21_size_t shift = s21_strlen(stringified_number) + is_plus_added + is_space_added;
-  // printf("%s\n", stringified_number);
   //Flag 0
   if (spec.zero && (is_plus_added || is_space_added)) {
     *str++ = is_plus_added ? '+' : ' ';

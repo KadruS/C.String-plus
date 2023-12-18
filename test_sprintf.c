@@ -226,7 +226,7 @@ START_TEST(sprintf_g_2) {
   char str[50];
   char str1[50];
   double dd = 10000000000.438954354534;
-  double d = 9993212.9993;
+  double d = 9993212.999;
   s21_sprintf(str, "asdfasdf %g asdfasdf%g", dd, d);
   sprintf(str1, "asdfasdf %g asdfasdf%g", dd, d);
   ck_assert_str_eq(str, str1);

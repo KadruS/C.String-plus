@@ -319,7 +319,7 @@ void spec_d(long int number, char *stringified_number,
 void spec_f(long double number, char *stringified_number, spec *spec);
 void spec_x(long int decimalValue, char hexString[], spec spec);
 void spec_g(long double number, char* stringified_number, spec *spec);
-void spec_e(long double number, char* stringified_number, spec spec);
+void spec_e(long double number, char* stringified_number, spec *spec);
 void pow_calc(int pow, char* pow_string);
 s21_size_t add_width_and_flags(char* stringified_number, char* str, spec spec);
 

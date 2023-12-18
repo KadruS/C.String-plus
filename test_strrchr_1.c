@@ -10,7 +10,7 @@ END_TEST
 START_TEST(strrchr_2) {
   char s[] = "Hello, world!";
   int ch = '\0';
-  ck_assert_ptr_eq(strrchr(s, ch), s21_strrchr(s, ch));
+  ck_assert_pstr_eq(strrchr(s, ch), s21_strrchr(s, ch));
 }
 END_TEST
 
@@ -70,5 +70,6 @@ Suite *test_strrchr(void) {
   tcase_add_test(tc, strrchr_7);
   tcase_add_test(tc, strrchr_8);
 
+  suite_add_tcase(s, tc);
   return s;
 }

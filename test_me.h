@@ -15,6 +15,7 @@
 // Suite *test_memcpy(void);
 // Suite *test_memset(void);
 Suite *test_strncat(void);
+Suite *test_strcat(void);
 // Suite *test_strchr(void);
 // Suite *test_strncmp(void);
 // Suite *test_strncpy(void);
@@ -35,5 +36,9 @@ Suite *test_sprintf(void);
 Suite *test_sprintf_f(void);
 Suite *test_sprintf_d(void);
 Suite *test_sprintf_e(void);
+Suite *test_sprintf_g(void);
+Suite *test_sprintf_octal(void);
+Suite *test_sprintf_hex(void);
+Suite *test_sprintf_HEX(void);
 
 #endif  // SRC_TESTS_ME_H

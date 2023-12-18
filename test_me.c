@@ -13,15 +13,20 @@ int main(void) {
                               // test_memcmp(),
                               // test_strtok(),
                               test_strncat(),
+                              test_strcat(),
                               // test_strerror(),
                               // test_to_lower(),
                               // test_to_upper(),
                               // test_trim(),
                               // test_insert(),
-                              // test_sprintf(),
-                              // test_sprintf_d(),
+                              test_sprintf(),
+                              test_sprintf_d(),
                               test_sprintf_f(),
-                              // test_sprintf_e(),
+                              test_sprintf_e(),
+                              test_sprintf_g(),
+                              test_sprintf_octal(),
+                              test_sprintf_hex(),
+                              test_sprintf_HEX(),
                                NULL};
 
   for (int i = 0; s21_string_test[i] != NULL; i++) {  // (&& failed == 0)

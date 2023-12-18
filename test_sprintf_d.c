@@ -296,15 +296,15 @@ Suite *test_sprintf_d(void) {
   Suite *s = suite_create("\033[45m-=S21_SPRINTF_D=-\033[0m");
   TCase *tc = tcase_create("sprintf_d_tc");
 
-  // tcase_add_test(tc, sprintf_1_signed);
-  // tcase_add_test(tc, sprintf_2_signed);
-  // tcase_add_test(tc, sprintf_3_signed);
-  // tcase_add_test(tc, sprintf_4_signed);
-  // tcase_add_test(tc, sprintf_5_signed);
-  // tcase_add_test(tc, sprintf_6_signed);
-  // tcase_add_test(tc, sprintf_7_signed);
-  // tcase_add_test(tc, sprintf_8_signed);
-  // tcase_add_test(tc, sprintf_9_signed);
+  tcase_add_test(tc, sprintf_1_signed);
+  tcase_add_test(tc, sprintf_2_signed);
+  tcase_add_test(tc, sprintf_3_signed);
+  tcase_add_test(tc, sprintf_4_signed);
+  tcase_add_test(tc, sprintf_5_signed);
+  tcase_add_test(tc, sprintf_6_signed);
+  tcase_add_test(tc, sprintf_7_signed);
+  tcase_add_test(tc, sprintf_8_signed);
+  tcase_add_test(tc, sprintf_9_signed);
   tcase_add_test(tc, sprintf_10_signed);
   tcase_add_test(tc, sprintf_11_signed);
   tcase_add_test(tc, sprintf_12_signed);
