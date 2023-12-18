@@ -306,11 +306,39 @@ START_TEST(sprintf_e_5) {
 }
 END_TEST
 
+//FLAGS
+//plus spec_d
+START_TEST(sprintf_plus_1) {
+  char str[50];
+  char str1[50];
+  int val1 = 1000;
+  int val2 = -1000;
+  int val3 = 0;
+  s21_sprintf(str, "a %+12d b %+12d c %+12d", val1, val2, val3);
+  sprintf(str1, "a %+12d b %+12d c %+12d", val1, val2, val3);
+  ck_assert_str_eq(str, str1);
+}
+END_TEST
+//minus spec_d
+START_TEST(sprintf_minus_1) {
+  char str[50];
+  char str1[50];
+  int val1 = 1000;
+  int val2 = -1000;
+  int val3 = -0;
+  s21_sprintf(str, "a %-12d b %-12d c %-12d", val1, val2, val3);
+  sprintf(str1, "a %-12d b %-12d c %-12d", val1, val2, val3);
+  ck_assert_str_eq(str, str1);
+}
+END_TEST
+
 Suite *test_sprintf(void) {
   Suite *s = suite_create("\033[45m-=S21_SPRINTF=-\033[0m");
   TCase *tc = tcase_create("sprintf_tc");
 
   suite_add_tcase(s, tc);
+  tcase_add_test(tc, sprintf_plus_1);
+  tcase_add_test(tc, sprintf_minus_1);
   tcase_add_test(tc, sprintf_1);
   tcase_add_test(tc, sprintf_c_1);
   tcase_add_test(tc, sprintf_c_2);
@@ -342,6 +370,7 @@ Suite *test_sprintf(void) {
   tcase_add_test(tc, sprintf_e_3);
   tcase_add_test(tc, sprintf_e_4);
   tcase_add_test(tc, sprintf_e_5);
+
 
   return s;
 }

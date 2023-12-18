@@ -141,7 +141,6 @@ char* spec_hash(char* buffer, char* mini, int* width, spec* spec) {
   return buffer;
 }
 
-
 int s21_sprintf(char* str, const char* format, ...) {
   va_list args;
   va_start(args, format);
@@ -216,14 +215,16 @@ int s21_sprintf(char* str, const char* format, ...) {
           if (spec.length == 'l') {
             int_arg = va_arg(args, long int);
           } else if (spec.length == 'h') {
-            int_arg = (short) va_arg(args, int);
+            int_arg = (short)va_arg(args, int);
           } else {
-            int_arg = (int) va_arg(args, int);
+            int_arg = (int)va_arg(args, int);
           }
 
           char stringified_number[50] = {0};
+          char* p = &stringified_number[0];
           spec_d(int_arg, stringified_number, spec);
-          str = set_buf(str, stringified_number, &spec);
+          // str = set_buf(str, stringified_number, &spec);
+          str += flag_plus(stringified_number, str, spec);
           format++;
           break;
         }
@@ -380,20 +381,22 @@ void spec_s(const char* str, char* mini, int accuracy) {
   }
 }
 
-void spec_d(long int number, char* stringified_number,
-            spec spec) {
+void spec_d(long int number, char* stringified_number, spec spec) {
   int i = 0;
   int length = 0;
+  int flag_minus = 0;
 
   if (number < 0) {
     number *= -1;
     stringified_number[i] = '-';
     i++;
     length++;
-  } else if (number == 0) { //под вопросом
+    flag_minus++;
+  } else if (number == 0) {  //под вопросом
     length++;
-    stringified_number[0] = (spec.accuracy == 0 && spec.specifier == 'd') ? '\0' : '0';
-    i = 100; // tut hzz
+    stringified_number[0] =
+        (spec.accuracy == 0 && spec.specifier == 'd') ? '\0' : '0';
+    i = 1;  // tut hzz
   }
 
   long int temp = number;
@@ -403,15 +406,17 @@ void spec_d(long int number, char* stringified_number,
   }
 
   // Accuracy
-  for (int flag_minus = i; length < spec.accuracy + flag_minus; i++) {
+  for (; length < spec.accuracy + flag_minus; i++) {
     stringified_number[i] = '0';
     length++;
   }
   // Strnum
   stringified_number[length] = '\0';
-  for (int str_end = length - 1; str_end >= i; str_end--) {
-    stringified_number[str_end] = number % 10 + '0';
-    number /= 10;
+  if (number != 0) {
+    for (int str_end = length - 1; str_end >= i; str_end--) {
+      stringified_number[str_end] = number % 10 + '0';
+      number /= 10;
+    }
   }
 }
 
@@ -427,7 +432,8 @@ void spec_f(long double number, char* stringified_number, spec* spec) {
     decimal_part *= -1;
   }
 
-  if (labs((long int)decimal_part) / (int)(pow(10, spec->accuracy)) % 10 == 1) { // условие хуета ( 
+  if (labs((long int)decimal_part) / (int)(pow(10, spec->accuracy)) % 10 ==
+      1) {  // условие хуета (
     decimal_part = 0;
     if (int_part >= 0) {
       int_part += 1;
@@ -443,11 +449,11 @@ void spec_f(long double number, char* stringified_number, spec* spec) {
   int decimal_accuracy = spec->accuracy;
   spec->accuracy = 0;
 
-  spec_d((long int)int_part, stringified_number, *spec); // insert lower
+  spec_d((long int)int_part, stringified_number, *spec);  // insert lower
 
   if (decimal_accuracy != 0) {
     s21_strcat(stringified_number, ".");
-    //here
+    // here
     s21_strcat(stringified_number, s);
   }
 }
@@ -517,7 +523,8 @@ void spec_g(long double number, char* stringified_number, spec* spec) {
   long double integer_part = 0;
   long double decimal_part = modfl(number, &integer_part);
   long int integer_part_int = (long int)(round(integer_part));
-  long int decimal_part_int = (long int)(round(decimal_part * pow(10, spec->accuracy)));
+  long int decimal_part_int =
+      (long int)(round(decimal_part * pow(10, spec->accuracy)));
 
   // Два цикла чтобы посчитать количество знаков в числах
   while (integer_part >= 1) {
@@ -526,7 +533,7 @@ void spec_g(long double number, char* stringified_number, spec* spec) {
   }
   int flag = 0;
   while (decimal_part_int > 1) {
-    if (decimal_part_int % 10 == 0 && !flag) { //добавил эту штуку |
+    if (decimal_part_int % 10 == 0 && !flag) {  //добавил эту штуку |
       spec->accuracy -= 1;
     }
     if (decimal_part_int % 10 != 0) {
@@ -540,7 +547,6 @@ void spec_g(long double number, char* stringified_number, spec* spec) {
   }
   // printf("%ld %d\n", decimal_part_int, spec->accuracy);
 
-
   // Переделываем точность с учетом значащих знаков
   // spec->accuracy -= len_int;                  ВМЕСТО ЭТОЙ ШТУКИ |
   if (spec->accuracy < 0) {
@@ -549,7 +555,7 @@ void spec_g(long double number, char* stringified_number, spec* spec) {
   spec->accuracy_defined = 1;
 
   if (len_int + len_dec > 6) {
-    while (integer_part_int % 10 == 0 && integer_part_int > 1){ // Хуйня цикл!
+    while (integer_part_int % 10 == 0 && integer_part_int > 1) {  // Хуйня цикл!
       spec->accuracy--;
       integer_part_int /= 10;
       if (spec->accuracy < 0) {
@@ -564,7 +570,7 @@ void spec_g(long double number, char* stringified_number, spec* spec) {
 }
 
 void spec_e(long double number, char* stringified_number, spec spec) {
-  //Is negative
+  // Is negative
   char sign = '+';
   if (number < 0) {
     number *= -1;
@@ -572,11 +578,13 @@ void spec_e(long double number, char* stringified_number, spec spec) {
     stringified_number++;
   }
 
-  //Making float and checking if power minus or not
+  // Making float and checking if power minus or not
   int pow = 0;
-  while(number >= 10 || number < 1) { //уточнить условие // отрицательные степени чекнуть //1-9 ??
+  while (number >= 10 ||
+         number <
+             1) {  //уточнить условие // отрицательные степени чекнуть //1-9 ??
     if (number >= 10) {
-      number /=10;
+      number /= 10;
     } else {
       number *= 10;
       sign = '-';
@@ -588,7 +596,7 @@ void spec_e(long double number, char* stringified_number, spec spec) {
   pow_calc(pow, pow_string);
 
   char e = spec.specifier == 'E' ? 'E' : 'e';
-  char notation[3] = { e, sign, '\0'};
+  char notation[3] = {e, sign, '\0'};
 
   spec_f(number, stringified_number, &spec);
   // printf("%s\n", stringified_number);
@@ -598,24 +606,50 @@ void spec_e(long double number, char* stringified_number, spec spec) {
 
 void pow_calc(int pow, char* pow_string) {
   int i = 2;
-  //0
+  // 0
   if (pow == 0) {
     pow_string[0] = '0';
     pow_string[1] = '0';
     pow_string[2] = '\0';
-  } else if(pow < 10) {
+  } else if (pow < 10) {
     pow_string[0] = '0';
   } else if (pow >= 100) {
     i = 3;
   }
   // pow_string[ ]
   // 10-100
-  while(i >= 0) {
-    pow_string[i-1] = pow % 10 + '0';
+  while (i >= 0) {
+    pow_string[i - 1] = pow % 10 + '0';
     pow /= 10;
     i--;
   }
   pow_string[3] = '\0';
+}
+
+s21_size_t flag_plus(char* stringified_number, char* str, spec spec) {
+  int is_plus_added = (spec.plus && *stringified_number != '-') ? 1 : 0;
+
+  //Width
+  s21_size_t shift = s21_strlen(stringified_number) + is_plus_added;
+  while (shift < spec.width && !spec.minus) {
+    *str++ = ' ';
+    shift++;
+  }
+  //Flag plus
+  if (spec.plus && *stringified_number != '-') {
+    *str++ = '+';
+  }
+  //Main algo
+  while (*stringified_number != '\0') {
+    *str++ = *stringified_number++;
+  }
+  //Flag minus
+  while (shift < spec.width && spec.minus) {
+    *str++ = ' ';
+    shift++;
+  }
+
+  return shift;
 }
 
 void test_spec_s() {
@@ -633,32 +667,32 @@ void test_spec_s() {
   printf("orig: %s|", str);
 }
 
-  // if (!spec->accuracy_defined) {
-  //   spec->accuracy = 6;
-  // }
-  // spec->length = 'l';
-  // double int_part = 0;
-  // double decimal_part = modf(number, &int_part);
-  // decimal_part = round(decimal_part * pow(10, spec->accuracy));
+// if (!spec->accuracy_defined) {
+//   spec->accuracy = 6;
+// }
+// spec->length = 'l';
+// double int_part = 0;
+// double decimal_part = modf(number, &int_part);
+// decimal_part = round(decimal_part * pow(10, spec->accuracy));
 
-  // if (decimal_part < 0) {
-  //   decimal_part *= -1;
-  // }
+// if (decimal_part < 0) {
+//   decimal_part *= -1;
+// }
 
-  // if (decimal_part == 1 && spec->accuracy == 0) {
-  //   int_part += 1;
-  // }
+// if (decimal_part == 1 && spec->accuracy == 0) {
+//   int_part += 1;
+// }
 
-  // char s[1000] = {0};
+// char s[1000] = {0};
 
-  // spec_d((long int)decimal_part, s, *spec);
+// spec_d((long int)decimal_part, s, *spec);
 
-  // int decimal_accuracy = spec->accuracy;
-  // spec->accuracy = 0;
+// int decimal_accuracy = spec->accuracy;
+// spec->accuracy = 0;
 
-  // spec_d((long int)int_part, stringified_number, *spec);
+// spec_d((long int)int_part, stringified_number, *spec);
 
-  // if (decimal_accuracy != 0) {
-  //   s21_strcat(stringified_number, ".");
-  //   s21_strcat(stringified_number, s);
-  // }
+// if (decimal_accuracy != 0) {
+//   s21_strcat(stringified_number, ".");
+//   s21_strcat(stringified_number, s);
+// }
